@@ -32,6 +32,7 @@ stage:
   - kubectl delete secret gcr-registry || true
   - kubectl create secret docker-registry gcr-registry --docker-server=us.gcr.io --docker-username=_json_key --docker-password="$(cat key.json)"
   - sh ./deploy/scripts/deploy.sh $CI_COMMIT_SHA
+  when: manual
   only:
   - master@tokenpay/tokenpayd
   - tags@tokenpay/tokenpayd
