@@ -1,21 +1,9 @@
 variables:
-  REGISTRY_IMAGE: us.gcr.io/tokenpay-8b80a/merchant
+  REGISTRY_IMAGE: us.gcr.io/tokenpay-8b80a/tokenpayd
 
 stages:
-- compile
 - build
 - deploy
-
-compile:
-  image: maven:3-jdk-12
-  services:
-  - docker:dind
-  stage: compile
-  script:
-  - mvn package -Djar.finalName=merchant.jar
-  artifacts:
-    paths:
-    - target/*.jar
 
 build:
   stage: build
@@ -31,8 +19,8 @@ build:
   - docker push "$REGISTRY_IMAGE:$CI_COMMIT_SHA"
   - docker push "$REGISTRY_IMAGE:latest"
   only:
-  - branches@tokenpay/merchant
-  - tags@tokenpay/merchant
+  - branches@tokenpay/tokenpayd
+  - tags@tokenpay/tokenpayd
 
 stage:
   image: google/cloud-sdk
@@ -45,5 +33,5 @@ stage:
   - kubectl create secret docker-registry gcr-registry --docker-server=us.gcr.io --docker-username=_json_key --docker-password="$(cat key.json)"
   - ./deploy/deploy.sh $CI_COMMIT_SHA
   only:
-  - master@tokenpay/merchant
-  - tags@tokenpay/merchant
+  - master@tokenpay/tokenpayd
+  - tags@tokenpay/tokenpayd
