@@ -1,0 +1,76 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tokenpay
+type: Opaque
+data:
+  rpcuser: dG9rZW5wYXk=
+  rpcpass: TW9kQ2liaXBOYXR5a3ZpbFd1T21EZXRtb2pIb3NoaWE=
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tokenpay
+  labels:
+    name: tokenpay
+spec:
+  ports:
+  - port: 8801
+    name: p2p
+    targetPort: 8801
+  - port: 8800
+    name: rpc
+    targetPort: 8800
+  selector:
+    app: tokenpay
+---
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: tokenpay
+spec:
+  selector:
+    matchLabels:
+      app: tokenpay
+  serviceName: tokenpay
+  replicas: 1
+  volumeClaimTemplates:
+  - metadata:
+      name: tokenpayd
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 200Gi
+  template:
+    metadata:
+      labels:
+        app: tokenpay
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: tokenpay
+        image: tzitzifritzi/tokenpayd
+        ports:
+        - name: p2p
+          containerPort: 8801
+          hostPort: 8801
+        - name: rpc
+          containerPort: 8800
+          hostPort: 8800
+        volumeMounts:
+        - mountPath: /tokenpay
+          name: tokenpayd
+        env:
+        - name: TOKENPAY_RPC_USER
+          valueFrom:
+            secretKeyRef:
+              name: tokenpay
+              key: rpcuser
+        - name: TOKENPAY_RPC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: tokenpay
+              key: rpcpass

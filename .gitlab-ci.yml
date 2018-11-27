@@ -1,0 +1,49 @@
+variables:
+  REGISTRY_IMAGE: us.gcr.io/tokenpay-8b80a/merchant
+
+stages:
+- compile
+- build
+- deploy
+
+compile:
+  image: maven:3-jdk-12
+  services:
+  - docker:dind
+  stage: compile
+  script:
+  - mvn package -Djar.finalName=merchant.jar
+  artifacts:
+    paths:
+    - target/*.jar
+
+build:
+  stage: build
+  image: docker
+  services:
+  - docker:dind
+  script:
+  - docker login -u _json_key -p "$REGISTRY_KEY" https://us.gcr.io
+  - ./deploy/build.sh "$REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+  - ./deploy/build.sh "$REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  - ./deploy/build.sh "$REGISTRY_IMAGE:latest"
+  - docker push "$REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+  - docker push "$REGISTRY_IMAGE:$CI_COMMIT_SHA"
+  - docker push "$REGISTRY_IMAGE:latest"
+  only:
+  - branches@tokenpay/merchant
+  - tags@tokenpay/merchant
+
+stage:
+  image: google/cloud-sdk
+  environment:
+    name: stage
+  stage: deploy
+  script:
+  - echo "$GOOGLE_KEY" > key.json # Google Cloud service account key
+  - kubectl delete secret gcr-registry || true
+  - kubectl create secret docker-registry gcr-registry --docker-server=us.gcr.io --docker-username=_json_key --docker-password="$(cat key.json)"
+  - ./deploy/deploy.sh $CI_COMMIT_SHA
+  only:
+  - master@tokenpay/merchant
+  - tags@tokenpay/merchant
