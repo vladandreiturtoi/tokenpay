@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-docker build --pull . -f ./deploy/Dockerfile -t $1
+docker build --pull . -f ./deploy/docker/Dockerfile -t $1
