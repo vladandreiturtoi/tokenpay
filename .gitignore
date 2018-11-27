@@ -50,3 +50,4 @@ libtool
 ltmain.sh
 
 !db4.8/build_unix/configure
+.idea/*
