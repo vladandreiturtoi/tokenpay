@@ -23,7 +23,7 @@ RUN mkdir "$TOKENPAY_DATA" \
 	&& chown -h tokenpay:tokenpay /home/tokenpay/.tokenpay
 VOLUME /data
 
-COPY docker-entrypoint.sh /entrypoint.sh
+COPY ./deploy/docker/docker-entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 8800 8801
